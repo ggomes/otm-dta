@@ -1,4 +1,4 @@
-package otmdta;
+package otmdta.data;
 
 import api.info.SubnetworkInfo;
 import error.OTMException;
