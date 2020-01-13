@@ -6,9 +6,8 @@ import otmdta.data.Assignment;
 import otmdta.data.ODMatrix;
 import otmdta.data.ODPair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -80,12 +79,34 @@ public class Utils {
         return x;
     }
 
-    public static Assignment project_onto_simplex(Assignment X, ODMatrix odmatrix){
+    public static List<Double> project_onto_simplex(List<Double> betahat, double z){
 
-        // https://arxiv.org/pdf/1101.6081.pdf
-        // https://jp.mathworks.com/matlabcentral/fileexchange/30332-projection-onto-simplex
+        if(betahat.isEmpty())
+            return new ArrayList<>();
 
-        return null;
+        if(z<=0)
+            return zero_array(betahat.size());
+
+        List<Double> mu = new ArrayList(betahat);
+        Collections.sort(mu);
+        double cs = mu.stream().mapToDouble(x->x).sum();
+        double pi = Double.NaN;
+        for(int ii=0;ii<mu.size();ii++){
+            pi = (cs-z)/(mu.size()-ii);
+            if(pi<mu.get(ii))
+                break;
+            cs -= mu.get(ii);
+        }
+
+        double theta = pi;
+        return betahat.stream().map(b-> Math.max(0,b-theta)).collect(Collectors.toList());
+    }
+
+    public static List<Double> zero_array(int n){
+        List<Double> x = new ArrayList<>();
+        for(int i=0;i<n;i++)
+            x.add(0d);
+        return x;
     }
 
 }
