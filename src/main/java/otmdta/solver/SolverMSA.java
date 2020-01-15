@@ -72,12 +72,7 @@ public class SolverMSA extends AbstractSolver {
             // 6. give it to the simulator
             System.out.println("\t6");
             for(Map.Entry<Long,List<Double>> e : path_demands.entrySet())
-                otm.scenario.set_demand_on_path_in_vph(
-                        e.getKey(),
-                        commodity_id,
-                        0f,
-                        problem.sample_dt,
-                        e.getValue());
+                otm.scenario().add_pathfull_demand(e.getKey(),commodity_id,0f,problem.sample_dt,e.getValue());
 
         }
 
