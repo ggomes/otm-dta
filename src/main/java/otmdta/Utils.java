@@ -1,19 +1,15 @@
 package otmdta;
 
+import api.info.SubnetworkInfo;
+import error.OTMException;
+import otmdta.data.ODPair;
+import output.AbstractOutput;
+import output.PathTravelTimeWriter;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class Utils {
-
-
-
-
-    public static List<Double> prod(double[] A,Double [] B){
-        List<Double> x = new ArrayList<>();
-        for(int i=0;i<A.length;i++)
-            x.add(A[i]*B[i]);
-        return x;
-    }
 
     public static List<Double> project_onto_simplex(List<Double> betahat, double z){
 
@@ -44,5 +40,16 @@ public class Utils {
             x.add(0d);
         return x;
     }
+
+    ////////////////////////////
+    // OTM
+    ////////////////////////////
+
+    public static api.OTM load_otm(String configfile,boolean validate,boolean jaxb_only) throws OTMException {
+        api.OTM otm = new api.OTM();
+        otm.load(configfile,validate,jaxb_only);
+        return otm;
+    }
+
 
 }

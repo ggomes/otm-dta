@@ -7,7 +7,7 @@
 
 	<models>
 		<model type="ctm" name="myctm" is_default="true">
-			<model_params sim_dt="2" max_cell_length="100"/>
+			<model_params sim_dt="5" max_cell_length="100"/>
 		</model>
 	</models>
 

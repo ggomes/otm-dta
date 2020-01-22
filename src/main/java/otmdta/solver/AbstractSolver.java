@@ -13,8 +13,8 @@ public abstract class AbstractSolver {
     public final double max_error = 0.1d;
     public final long max_iterations = 1000;
 
-    public abstract void initialize_for_od_pair(ODPair odpair) throws OTMException ;
-    public abstract double advance_for_od_pair(ODPair odpair,long max_iterations) throws OTMException;
+    public abstract void initialize_for_od_pair(final ODPair odpair) throws OTMException ;
+    public abstract double advance_for_od_pair(final ODPair odpair,long max_iterations) throws OTMException;
 
     public AbstractSolver(VIProblem problem){
         this.problem = problem;
@@ -35,7 +35,7 @@ public abstract class AbstractSolver {
                 // advance for od pair, accumulate error
                 double it_error = 0d;
                 for(ODPair odpair : problem.odpairs)
-                    it_error += advance_for_od_pair(odpair,advance_max_iterations);
+                    it_error += advance_for_od_pair(odpair, advance_max_iterations);
 
                 error.add(it_error);
 
