@@ -2,22 +2,22 @@ package otmdta.solver;
 
 import error.OTMException;
 import otmdta.VIProblem;
+import otmdta.data.ODPair;
 
 /** Modified Projection Method **/
 public class SolverMPM extends AbstractSolver {
 
-    public SolverMPM(VIProblem problem){
+    public SolverMPM(VIProblem problem) {
         super(problem);
     }
 
     @Override
-    public void initialize() throws OTMException{
-        System.out.println("INITIALIZING SOLVER");
+    public void initialize_for_od_pair(ODPair odpair) throws OTMException {
+
     }
 
     @Override
-    public void solve()  throws OTMException {
-        System.out.println("RUNNING MPM");
+    public double advance_for_od_pair(ODPair odpair, long max_iterations) throws OTMException {
+        return 0;
     }
-
 }

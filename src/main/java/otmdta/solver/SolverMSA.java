@@ -1,86 +1,119 @@
 package otmdta.solver;
 
 import error.OTMException;
-import otmdta.Utils;
 import otmdta.VIProblem;
-import otmdta.data.Assignment;
+import otmdta.data.ODPair;
 import output.AbstractOutput;
 import output.PathTravelTimeWriter;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /** Method of Successive Averages **/
 public class SolverMSA extends AbstractSolver {
 
-    public Assignment curr;
-    public Assignment prev;
+    double [][] curr;
+    double [][] prev;
 
     public SolverMSA(VIProblem problem){
         super(problem);
     }
 
     @Override
-    public void initialize() throws OTMException {
-        curr = Utils.get_random_assignment(problem.od_matrix);
-        prev = curr.clone();
+    public void initialize_for_od_pair(ODPair odpair) throws OTMException {
+        this.curr = odpair.get_random_assignment();
+        odpair.set_assignment(curr);
     }
 
-
     @Override
-    public void solve() throws OTMException {
-        System.out.println("RUNNING MSA");
-
-        // Initialize the solver
-        initialize();
-
-        api.OTM otm = problem.otm;
-        long commodity_id = otm.scenario().get_commodities().iterator().next().id;
+    public double advance_for_od_pair(ODPair odpair,long advance_max_iterations) throws OTMException {
 
         // loop
-        int c=0;
-        while(true){
+        double k=0;
+        while(true) {
 
-            System.out.println(c++);
+            System.out.println(k++);
+
+            // record previous
+            prev = curr.clone();
 
             // 1. Run the model and obtain the travel times on all paths
-            System.out.println("\t1");
-            otm.run(0f,problem.time_horizon);
+            odpair.run_simulation(problem.time_horizon);
 
             // 2. Extract the travel times and arrange them.
-            System.out.println("\t2");
-            Map<Long, List<Double>> travel_times = new HashMap<>();
-            for(AbstractOutput output : otm.output.get_data()){
-                PathTravelTimeWriter ttwriter = (PathTravelTimeWriter) output;
-                travel_times.put(ttwriter.get_path_id(),ttwriter.get_travel_times_sec());
+            double [][] tt = odpair.get_assignment();
+            for(AbstractOutput output : odpair.otm.output.get_data()){
+                PathTravelTimeWriter o = (PathTravelTimeWriter) output;
+                int path_index = odpair.path_id_to_index.get(o.get_path_id());
+                List<Double> ltt = o.get_travel_times_sec();
+                for(int t=0;t<ltt.size();t++)
+                    tt[path_index][t] = ltt.get(t);
             }
 
-            // 3. Improvement step
-            System.out.println("\t3");
+            // 3. All-or-nothing assignment
+            int [] aon_path_index = odpair.AllOrNothing(tt);
 
+            // 5. Update
+            double s = 1/k;
+            double sbar = 1-s;
+            double [][] x_new = odpair.get_assignment();
+            double error = 0d;
 
-            // 4. Consider stopping
-            System.out.println("\t4");
-            if(stop_criterion(c))
+            for(int p=0;p<odpair.num_paths;p++) {
+                for (int t = 0; t < odpair.num_steps; t++) {
+                    if (p == aon_path_index[t]) {
+                        error += tt[p][t] * s * Math.abs(odpair.total_demand_vph[t] - curr[p][t]);
+                        curr[p][t] = sbar * curr[p][t] + s * odpair.total_demand_vph[t];
+                    } else {
+                        error += tt[p][t] * s * curr[p][t];
+                        curr[p][t] = sbar * curr[p][t];
+                        error += tt[p][t] * (curr[p][t] - prev[p][t]);
+                    }
+                }
+            }
+
+            // Stop criterion
+            if(error<max_error)
                 break;
 
-            // 5. convert distribution to path demands
-            System.out.println("\t5");
-            Map<Long,List<Double>> path_demands = problem.od_matrix.assignment2demands(curr);
+            if(k>=advance_max_iterations)
+                break;
 
-            // 6. give it to the simulator
-            System.out.println("\t6");
-            for(Map.Entry<Long,List<Double>> e : path_demands.entrySet())
-                otm.scenario().add_pathfull_demand(e.getKey(),commodity_id,0f,problem.sample_dt,e.getValue());
+            // apply the assignment
+            odpair.set_assignment(curr);
 
         }
 
-
+        return 0;
     }
 
 
     public boolean stop_criterion(int iteration){
+
+        /**
+         # Calculating the error
+         current_cost_vector = np.asarray(current_path_costs.vector_path_costs())
+
+         if x_assignment_vector is None: x_assignment_vector = np.asarray(assignment.vector_assignment())
+
+
+         y_assignment_vector = np.asarray(y_assignment.vector_assignment())
+
+
+
+         error = round(np.abs(np.dot(current_cost_vector, y_assignment_vector - x_assignment_vector)/
+         np.dot(y_assignment_vector,current_cost_vector)),4)
+
+
+         if prev_error == -1 or prev_error > error:
+         prev_error = error
+         assignment_vector_to_return = copy(x_assignment_vector)
+
+         if error < stop:
+         if display == 1: print "MSA Stop with error: ", error
+         return assignment, x_assignment_vector, sim_time, comm_time
+
+         **/
+
         return iteration>10;
     }
 
