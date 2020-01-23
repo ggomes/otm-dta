@@ -12,6 +12,7 @@ import java.util.*;
 public class ODPair {
 
     public double [][] curr;
+    public List<Double> error;
 
     public final OTM otm;
     public final long commodity_id;
@@ -47,6 +48,9 @@ public class ODPair {
 
         this.num_steps = total_demand_vph.length;
         this.num_paths = path_ids.size();
+
+        this.request_output(sample_dt);
+
     }
 
     public void set_assignment(double [][] assgn) throws OTMException {
@@ -70,7 +74,7 @@ public class ODPair {
             PathTravelTimeWriter o = (PathTravelTimeWriter) output;
             int path_index = path_id_to_index.get(o.get_path_id());
             List<Double> ltt = o.get_travel_times_sec();
-            for(int t=0;t<ltt.size();t++)
+            for(int t=0;t<num_steps;t++)
                 tt[path_index][t] = ltt.get(t);
         }
         return tt;

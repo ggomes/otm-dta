@@ -17,7 +17,12 @@ public class SolverMPM extends AbstractSolver {
     }
 
     @Override
-    public double advance_for_od_pair(ODPair odpair, long max_iterations) throws OTMException {
+    public double advance_for_od_pair(ODPair odpair,double max_error, long max_iterations) throws OTMException {
         return 0;
+    }
+
+    @Override
+    public void finalize_for_od_pair(ODPair odpair) {
+
     }
 }

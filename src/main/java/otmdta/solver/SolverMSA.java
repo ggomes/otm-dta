@@ -1,16 +1,17 @@
 package otmdta.solver;
 
 import error.OTMException;
+import otmdta.Utils;
 import otmdta.VIProblem;
 import otmdta.data.ODPair;
 import output.AbstractOutput;
 import output.PathTravelTimeWriter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Method of Successive Averages **/
 public class SolverMSA extends AbstractSolver {
-
 
     public SolverMSA(VIProblem problem){
         super(problem);
@@ -20,6 +21,7 @@ public class SolverMSA extends AbstractSolver {
     public void initialize_for_od_pair(final ODPair odpair) throws OTMException {
 
         odpair.curr = new double[odpair.num_paths][odpair.num_steps];
+        odpair.error = new ArrayList<>();
 
         if(odpair.num_paths==1)
             odpair.curr[0] = odpair.total_demand_vph;
@@ -30,20 +32,18 @@ public class SolverMSA extends AbstractSolver {
     }
 
     @Override
-    public double advance_for_od_pair(final ODPair odpair,long advance_max_iterations) throws OTMException {
+    public double advance_for_od_pair(final ODPair odpair,double max_error,long advance_max_iterations) throws OTMException {
 
         // trivial case
-        if(odpair.num_paths==1)
+        if(odpair.num_paths==1) {
+            odpair.error.add(0d);
             return 0d;
+        }
 
         // loop
         int k=0;
+        double error;
         while(true) {
-
-            System.out.println(k++);
-
-            // record previous
-//            odpair.prev = odpair.curr.clone();
 
             // 1. Run the model and obtain the travel times on all paths
             odpair.run_simulation(problem.time_horizon);
@@ -54,7 +54,7 @@ public class SolverMSA extends AbstractSolver {
                 PathTravelTimeWriter o = (PathTravelTimeWriter) output;
                 int path_index = odpair.path_id_to_index.get(o.get_path_id());
                 List<Double> ltt = o.get_travel_times_sec();
-                for(int t=0;t<ltt.size();t++)
+                for(int t=0;t<odpair.num_steps;t++)
                     tt[path_index][t] = ltt.get(t);
             }
 
@@ -62,9 +62,10 @@ public class SolverMSA extends AbstractSolver {
             int [] aon_path_index = odpair.AllOrNothing(tt);
 
             // 5. Update
+            k++;
             double s = 1.0/((double)k);
             double sbar = 1-s;
-            double error = 0d;
+            error = 0d;
             for(int p=0;p<odpair.num_paths;p++) {
                 for (int t = 0; t < odpair.num_steps; t++) {
                     if (p == aon_path_index[t]) {
@@ -89,7 +90,14 @@ public class SolverMSA extends AbstractSolver {
 
         }
 
-        return 0;
+        odpair.error.add(error);
+
+        return error;
+    }
+
+    @Override
+    public void finalize_for_od_pair(ODPair odpair) {
+        System.out.println(odpair.error);
     }
 
 }

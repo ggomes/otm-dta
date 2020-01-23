@@ -1,12 +1,11 @@
 package otmdta;
 
-import api.info.SubnetworkInfo;
 import error.OTMException;
-import otmdta.data.ODPair;
-import output.AbstractOutput;
-import output.PathTravelTimeWriter;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
 
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Utils {

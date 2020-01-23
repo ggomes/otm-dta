@@ -5,16 +5,18 @@ import otmdta.VIProblem;
 import otmdta.data.ODPair;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractSolver {
 
     public final VIProblem problem;
-    public final double max_error = 0.1d;
-    public final long max_iterations = 1000;
+    public final long max_iterations = 100;
 
     public abstract void initialize_for_od_pair(final ODPair odpair) throws OTMException ;
-    public abstract double advance_for_od_pair(final ODPair odpair,long max_iterations) throws OTMException;
+    public abstract double advance_for_od_pair(final ODPair odpair,double max_error,long max_iterations) throws OTMException;
+    public abstract void finalize_for_od_pair(ODPair odpair);
 
     public AbstractSolver(VIProblem problem){
         this.problem = problem;
@@ -27,17 +29,15 @@ public abstract class AbstractSolver {
             for(ODPair odpair : problem.odpairs)
                 initialize_for_od_pair(odpair);
 
-            List<Double> error = new ArrayList<>();
             long it = 0;
-            int advance_max_iterations = 20;
+            int advance_max_iterations = 100;
+            double max_error = 10d;
             while(true){
 
                 // advance for od pair, accumulate error
                 double it_error = 0d;
                 for(ODPair odpair : problem.odpairs)
-                    it_error += advance_for_od_pair(odpair, advance_max_iterations);
-
-                error.add(it_error);
+                    it_error += advance_for_od_pair(odpair, max_error, advance_max_iterations);
 
                 // stop criterion
                 if(it_error<max_error)
@@ -48,10 +48,16 @@ public abstract class AbstractSolver {
 
                 it++;
             }
+
+            // finalize
+            for(ODPair odpair : problem.odpairs)
+                finalize_for_od_pair(odpair);
+
         } catch (OTMException e) {
             e.printStackTrace();
         }
-    };
+
+    }
 
 
 }
