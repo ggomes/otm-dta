@@ -1,38 +1,28 @@
 package otmdta.data;
 
-import api.OTM;
 import api.info.SubnetworkInfo;
 import error.OTMException;
-import otmdta.Utils;
-import output.AbstractOutput;
-import output.PathTravelTimeWriter;
 
 import java.util.*;
 
 public class ODPair {
 
-    public double [][] curr;
-    public List<Double> error;
-
-    public final OTM otm;
-    public final long commodity_id;
-    public final float sample_dt;
-
     public final long origin_node_id;
     public final long destination_node_id;
     public final double[] total_demand_vph;   // over time
 
+    public double [][] asgnmt;
+    public double [][] tt;
+
+    public List<Double> error;
     public final List<Long> path_ids;
     public final Map<Long,Integer> path_id_to_index;
     public final int num_steps;
     public final int num_paths;
 
-    public ODPair(String configfile, long commodity_id,float sample_dt,long origin_node_id, long destination_node_id, List<SubnetworkInfo> subnetworks,double [] total_demand_vph) throws OTMException {
+    public ODPair(long origin_node_id, long destination_node_id, List<SubnetworkInfo> subnetworks,double [] total_demand_vph) throws OTMException {
         this.origin_node_id = origin_node_id;
         this.destination_node_id = destination_node_id;
-        this.commodity_id = commodity_id;
-        this.sample_dt = sample_dt;
-        this.otm = Utils.load_otm(configfile,false,false);
 
         if(subnetworks.stream().anyMatch(s->!s.is_path))
             throw new OTMException("Not a path!");
@@ -48,36 +38,16 @@ public class ODPair {
 
         this.num_steps = total_demand_vph.length;
         this.num_paths = path_ids.size();
-
-        this.request_output(sample_dt);
-
     }
 
-    public void set_assignment(double [][] assgn) throws OTMException {
-        for(int p=0;p<num_paths;p++){
-            List<Double> list = new ArrayList<>();
-            for(int t=0;t<num_steps;t++)
-                list.add(assgn[p][t]);
-            otm.scenario().add_pathfull_demand(path_ids.get(p),commodity_id,0f,sample_dt,list);
-        }
-    }
-
-    public void request_output(float sample_dt) {
-        for(long path_id : path_ids)
-            otm.output.request_path_travel_time(path_id, sample_dt);
-    }
-
-    public double[][] run_simulation(float time_horizon) throws OTMException {
-        otm.run(0, time_horizon);
-        double [][] tt = get_assignment();
-        for(AbstractOutput output : otm.output.get_data()){
-            PathTravelTimeWriter o = (PathTravelTimeWriter) output;
-            int path_index = path_id_to_index.get(o.get_path_id());
-            List<Double> ltt = o.get_travel_times_sec();
-            for(int t=0;t<num_steps;t++)
-                tt[path_index][t] = ltt.get(t);
-        }
-        return tt;
+    public void initialize() {
+        asgnmt = new double[num_paths][num_steps];
+        tt = new double[num_paths][num_steps];
+        error = new ArrayList<>();
+        if(num_paths==1)
+            asgnmt[0] = total_demand_vph;
+        else
+            asgnmt = get_random_assignment();
     }
 
     public double [][] get_assignment(){

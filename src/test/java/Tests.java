@@ -5,9 +5,7 @@ import otmdta.Utils;
 import otmdta.data.ODPair;
 import otmdta.solver.SolverMSA;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static junit.framework.Assert.*;
 
@@ -17,16 +15,16 @@ public class Tests {
     float time_horizon = 3600;
     float sample_dt = 60;
 
-    @Test
-    public void load_otm(){
-        try {
-            api.OTM otm = Utils.load_otm(configfile,true, false);
-            assertNotNull(otm);
-        } catch (OTMException e) {
-            e.printStackTrace();
-            fail();
-        }
-    }
+//    @Test
+//    public void load_otm(){
+//        try {
+//            api.OTM otm = Utils.load_otm(configfile,true, false);
+//            assertNotNull(otm);
+//        } catch (OTMException e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
 
     @Test
     public void build_vi_problem(){
@@ -39,20 +37,19 @@ public class Tests {
         }
     }
 
-    @Test
-    public void run_otm(){
-        try {
-            api.OTM otm = Utils.load_otm(configfile,true, false);
-            VIProblem problem = new VIProblem(configfile,time_horizon, sample_dt);
-            ODPair odpair = problem.odpairs.iterator().next();
-            odpair.run_simulation(time_horizon);
-            assertNotNull(otm);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
-        }
-    }
-
+//    @Test
+//    public void run_otm(){
+//        try {
+//            api.OTM otm = Utils.load_otm(configfile,true, false);
+//            VIProblem problem = new VIProblem(configfile,time_horizon, sample_dt);
+//            ODPair odpair = problem.odpairs.iterator().next();
+//            odpair.run_simulation(time_horizon);
+//            assertNotNull(otm);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            fail();
+//        }
+//    }
 
     @Test
     public void test_project_onto_simplex(){
@@ -70,15 +67,20 @@ public class Tests {
         assertTrue(beta.stream().allMatch(x->x>=0d));
     }
 
-    @Test
-    public void run_MSA(){
-        try {
-            VIProblem problem = new VIProblem(configfile,time_horizon, sample_dt);
-            SolverMSA msa = new SolverMSA(problem);
-            msa.solve();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void run_single_MSA(){
+//        try {
+//            VIProblem problem = new VIProblem(configfile,time_horizon, sample_dt);
+//
+//            // all od pairs for single solver
+//            Set<ODPair> odpairs = new HashSet<>();
+//            odpairs.addAll(problem.odpairs);
+//
+//            SolverMSA msa = new SolverMSA(problem,odpairs);
+//            msa.solve();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 }
